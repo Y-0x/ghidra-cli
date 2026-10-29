@@ -6,17 +6,34 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
 
-      - name: Build the app
-        run: cargo build --verbose
+      - name: Build release binary
+        shell: bash
+        run: cargo build --release --locked
+
+      - name: Prepare artifact
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp target/release/ghidra.exe artifacts/ghidra.exe
+          else
+            cp target/release/ghidra artifacts/ghidra
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghidra-${{ runner.os }}
+          path: artifacts/*
