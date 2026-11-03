@@ -43,8 +43,11 @@ jobs:
       - name: Build release binary (cross)
         if: matrix.cross
         shell: bash
+        env:
+          OPENSSL_STATIC: "1"
+          OPENSSL_VENDORED: "1"
         run: cross build --release --locked --target ${{ matrix.target }}
-
+        
       - name: Prepare artifact
         shell: bash
         run: |
